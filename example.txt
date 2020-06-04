@@ -1,0 +1,138 @@
+PUT A(10,10) as WORD
+PUT B(10,10) as FLOAT
+PUT C(10,10) as WORD
+PUT L,P,M1,N1,M2,N2,X,Y as FLOAT
+
+BEGIN
+
+WHEREVER A > B THEN
+GIVE A = B
+OTHER
+GIVE A = B + C
+NOWHERE
+
+END
+-------------------------------------------------------
+GIVE i = 1
+WHILST (i <= 10) : 
+PRINT i
+GIVE i = i + 1
+ENDWHILST
+
+FOR i = 1 TILL 10 :
+PRINT i
+INCOMING i
+
+-------------------------------------------------
+BEGIN
+
+WHILST (a > b) OR (b < c) : 
+WHILST a > y : 
+WHEREVER b > x THEN
+GIVE b = b + d
+NOWHERE
+ENDWHILST
+ENDWHILST
+
+END
+---------------------------------------------------------
+BEGIN
+
+ACT:
+GIVE a = a + 1
+LOOP UNTIL (a<b)
+
+END
+----------------------------------------------------------
+
+GIVE A = 0
+GIVE B = 24
+GIVE C = 12
+
+ACT:
+GIVE A = A + 1
+LOOP UNTIL (A>B)
+
+--------------------------------------------------------------
+
+PUT A as WORD
+PUT C,B  as FLOAT
+
+BEGIN
+
+
+#GIVE C = 8753
+
+TAKE "Dame el numero:" : C
+
+ACT:
+GIVE C = C / 10
+GIVE A = C
+GIVE B = (C - A)*10
+PRINT B
+GIVE C = A
+LOOP UNTIL (C == 0)
+
+
+END
+
+------------------------------------
+
+PUT i, j as WORD
+PUT count, total, it, x, z, powe, y, step as FLOAT
+PUT sum, n , x1 as FLOAT
+
+PUT A, B , C, D, F as FLOAT
+
+BEGIN
+
+GIVE A = 1
+GIVE B = -9
+GIVE C = 18
+
+GIVE D = B*B - 4*A*C
+
+WHEREVER D > 0 THEN
+
+GIVE count = 1
+GIVE total = 0
+GIVE powe = 1
+
+GIVE it = 40
+GIVE x = D
+GIVE z = (x+1) / (x-1)
+GIVE step = ((x-1)*(x-1))/((x+1)*(x+1))
+
+WHILST (count <= it):
+GIVE z = z * step
+GIVE y = ( 1 / powe ) * z
+GIVE total = total + y
+GIVE powe = powe + 2
+GIVE count = count + 1
+ENDWHILST
+GIVE total = 2 * total
+
+GIVE n = 40
+GIVE x1 = total / 2
+GIVE sum = 1
+
+GIVE i = n - 1
+WHILST i > 0:
+GIVE sum = 1 + x1 * sum / i
+GIVE i = i - 1
+ENDWHILST
+
+GIVE F = ((-1 * B) + sum) / (2*A)
+PRINT ("La x1 es:") : F
+
+GIVE F = ((-1 * B) - sum) / (2*A)
+PRINT ("La x2 es:") : F
+
+NOWHERE
+
+
+
+END
+
+
+-------------------------------------------

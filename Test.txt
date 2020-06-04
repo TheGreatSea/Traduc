@@ -1,0 +1,68 @@
+PUT i, j as WORD
+PUT count, total, it, x, z, powe, y, step as FLOAT
+PUT sum, n , x1 as FLOAT
+
+PUT A, B , C, D, F as FLOAT
+
+BEGIN
+PUT i, j as WORD
+PUT count, total, it, x, z, powe, y, step as FLOAT
+PUT sum, n , x1 as FLOAT
+
+PUT A, B , C, D, F as FLOAT
+
+BEGIN
+
+#GIVE A = 1
+#GIVE B = -9
+#GIVE C = 18
+
+
+TAKE "Dame el valor de a":  A 
+TAKE "Dame el valor de b": B 
+TAKE "Dame el valor de c": C 
+
+
+GIVE D = B*B - 4*A*C
+
+WHEREVER D > 0 THEN
+
+GIVE count = 1
+GIVE total = 0
+GIVE powe = 1
+
+GIVE it = 40
+GIVE x = D
+GIVE z = (x+1) / (x-1)
+GIVE step = ((x-1)*(x-1))/((x+1)*(x+1))
+
+WHILST (count <= it):
+GIVE z = z * step
+GIVE y = ( 1 / powe ) * z
+GIVE total = total + y
+GIVE powe = powe + 2
+GIVE count = count + 1
+ENDWHILST
+GIVE total = 2 * total
+
+GIVE n = 40
+GIVE x1 = total / 2
+GIVE sum = 1
+
+GIVE i = n - 1
+WHILST i > 0:
+GIVE sum = 1 + x1 * sum / i
+GIVE i = i - 1
+ENDWHILST
+
+GIVE F = ((-1 * B) + sum) / (2*A)
+PRINT ("La x1 es:") : F
+
+GIVE F = ((-1 * B) - sum) / (2*A)
+PRINT ("La x2 es:") : F
+
+NOWHERE
+
+END
+
+END
