@@ -9,6 +9,15 @@ class data:
         self.type = types
         self.value = value
 
+class var_obt:
+    def __init__(self, name, types, value, dim1, dim2, dim3):
+        self.name = name
+        self.type = types
+        self.value = value
+        self.dim1 = dim1
+        self.dim2 = dim2
+        self.dim3 = dim3
+
 tokens = [
     'ID',
     'NUM',
@@ -27,6 +36,8 @@ tokens = [
     'MENORI',
     'PARENTESISI',
     'PARENTESISF',
+    'CORCHETESI',
+    'CORCHETESF',
     'AND',
     'OR'
 ]
@@ -232,6 +243,16 @@ def t_PARENTESISF(t):
     t.type = 'PARENTESISF'
     return t
 
+def t_CORCHETESI(t):
+    r'\['
+    t.type = 'CORCHETESI'
+    return t
+
+def t_CORCHETESF(t):
+    r'\]'
+    t.type = 'CORCHETESF'
+    return t
+
 def t_COMA(t):
     r','
     t.type = 'COMA'
@@ -323,6 +344,8 @@ lexer = lex.lex()
 tablaSimbolos = []
 variableSpace = []
 temporalSpace = []
+dirProcedimientos = []
+dirEtiquetas = []
 
 variables = []
 tipos = []
@@ -331,8 +354,11 @@ temporales = ["temporal1", "temporal2", "temporal3", "temporal4", "temporal5", "
 cuadruplos = []
 operandos = []
 saltos = []
+ID = ''
+tf = ''
 
 temp_num = 9
+
 def checkTemporals(): 
     global temp_num, avail, temporales
     if len(temporales) == 0:
@@ -343,8 +369,10 @@ def checkTemporals():
 
 def p_PROGRAMA(p): 
     '''
-    PROGRAMA : V R BEGIN B END R
+    PROGRAMA : V BEGIN B END R
     '''
+    global dirProcedimientos, cuadruplos
+    cuadruplos.append(['ENDMAIN','-','-','-'])
 
 def p_V(p):
     '''
@@ -375,6 +403,7 @@ def p_VAR(p):
         i += 1
     p[0] = 1 + i
 
+#Puede ser numero o variable
 def p_VALUE(p):
     '''
     VALUE : ID
@@ -382,6 +411,7 @@ def p_VALUE(p):
     '''
     p[0] = p[1]
 
+#Gramatica para la declaracion de variables
 def p_VEC(p):
     '''
     VEC : ID
@@ -389,21 +419,47 @@ def p_VEC(p):
     | ID PARENTESISI VALUE COMA VALUE PARENTESISF
     | ID PARENTESISI VALUE COMA VALUE COMA VALUE PARENTESISF
     '''
-    if len(p) >= 2 :
+    if len(p) == 2 :
+        p[0] = p[1]
+    elif len(p) == 5 :
+        p[0] = p[1]
+    elif len(p) == 7 :
+        p[0] = p[1]
+    elif len(p) == 9 :
         p[0] = p[1]
 
+
+#Gramatica de los metodos
 def p_R(p):
     '''
-    R : SUBMETHOD ID B RETURN R
+    R : PROCEDURE B RETURN R
     |
     '''
+    global dirProcedimientos, cuadruplos
+    cuadruplos.append(['ENDPROCEDURE','-','-','-'])
 
+def p_PROCEDURE(p):
+    '''
+    PROCEDURE : SUBMETHOD ID
+    '''
+    global dirProcedimientos, cuadruplos
+    rep= False
+    for i in range(len(dirProcedimientos)):
+        if (dirProcedimientos[i][0] == str(p[2])):
+            rep = True
+            break
+    if rep == False :
+        dirProcedimientos.append([p[2],len(cuadruplos)])
+    else:
+        raise Exception('El Id de una sub-metodo es un duplicado')
+
+#Body de la gramatica
 def p_B(p):
     '''
     B : CLEAR B
-    | ET ID B
-    | JUMP ID B
-    | TRAVEL ID B
+    | ETIQUETAS B
+    | SALTO B
+    | CALL B
     | PRINT MENS B
     | READ B
     | GIVE EXPR B
@@ -414,6 +470,47 @@ def p_B(p):
     |
     '''
 
+#Gramatica para llamr a sub-procedimientos
+def p_CALL(p):
+    '''
+    CALL : TRAVEL ID
+    '''
+    global dirProcedimientos, cuadruplos
+    cuadruplos.append(['CALL','-','-',str(p[2])])
+
+#Gramatica para generar etiquetas
+def p_ETIQUETAS(p):
+    '''
+    ETIQUETAS : ET ID
+    '''
+    global dirEtiquetas, cuadruplos
+    rep= False
+    for i in range(len(dirEtiquetas)):
+        if (dirEtiquetas[i][0] == str(p[2])):
+            rep = True
+            break
+    if rep == False :
+        dirEtiquetas.append([p[2],len(cuadruplos)])
+    else:
+        raise Exception('El Id de una etiqueta es duplicado')
+
+#Gramatica para generar saltos
+def p_SALTO(p):
+    '''
+    SALTO : JUMP ID
+    '''
+    global dirEtiquetas, cuadruplos
+    found = False
+    for i in range(len(dirEtiquetas)):
+        if (dirEtiquetas[i][0] == str(p[2])):
+            found = True
+            break
+    if found == True:
+        cuadruplos.append(['JUMP','-',dirEtiquetas[i][0],dirEtiquetas[i][1]])
+    else:
+        cuadruplos.append(['JUMP','-',dirEtiquetas[i][0],-1])
+
+#Gramatica para el read
 def p_READ(p):
     '''
     READ : TAKE STRING DOSPUNTOS ASGN
@@ -422,8 +519,7 @@ def p_READ(p):
     read_var = data(str(p[2]),"ALL",p[4])
     cuadruplos.append(['TAKE','-','-',read_var])
 
-ID = ''
-tf = ''
+# Gramatica del for loop
 def p_LOOPFOR(p):
     '''
     LOOPFOR : FORID EXP1 EXP2 DOSPUNTOS B INCOMING ID
@@ -468,6 +564,7 @@ def p_FORID(p):
     global operandos, cuadruplos, temporales, avail, saltos
     operandos.append(p[2])
 
+#Gramatica del loop do while
 def p_LOOPDO(p):
     '''
     LOOPDO : DO DOSPUNTOS B LOOP UNTIL PARENTESISI EL PARENTESISF 
@@ -484,6 +581,7 @@ def p_DO(p):
     global operandos, cuadruplos, temporales, avail, saltos
     saltos.append(len(cuadruplos))
 
+#Gramatica del while
 def p_LOOPWHILE(p):
     '''
     LOOPWHILE : WHILE LOGIC DOSPUNTOS B ENDWHILST 
@@ -501,6 +599,7 @@ def p_WHILE(p):
     global operandos, cuadruplos, temporales, avail, saltos
     saltos.append(len(cuadruplos))
 
+#Gramatica del if
 def p_IF(p):
     '''
     IF : WHEREVER LOGIC THEN B ELSE B NOWHERE 
@@ -548,6 +647,7 @@ def p_ASGN(p):
     if len(p) == 3 :
         p[0] = p[2] * -1
 
+#MENS significa mensaje. Es para el PRINT
 def p_MENS(p):
     '''
     MENS : VEC
@@ -565,6 +665,7 @@ def p_MENS(p):
         print_value = data(str(p[2]),'ALL',str(p[5])) 
     cuadruplos.append(['PRINT', '-', '-', print_value])
 
+#Operaciones aritmeticas
 def p_EA(p):
     '''
     EA : TA
@@ -612,6 +713,7 @@ def p_FA(p):
     if len(p) == 2 :
         operandos.append(p[1])
 
+#Operaciones logicas
 def p_EL(p):
     '''
     EL : TL
@@ -673,6 +775,7 @@ def p_error(p):
     print("#PARSING ERROR#")
     print(p)
 
+#Metodos varios para el funcionamiento correcto del programa
 def createSymbolTable(): 
     global variables
     global tablaSimbolos
@@ -761,109 +864,7 @@ print("Cuadruplos")
 for i in range(len(cuadruplos)):
     print(cuadruplos[i])
 
-pc = 0
-while (pc < len(cuadruplos)):
-    #print ("Program counter: ", pc)
-    if (cuadruplos[pc][0] == 'PRINT'):
-        print_var = verifyVariable(cuadruplos[pc][3].value)
-        if(cuadruplos[pc][3].name == 'None'):
-            print(print_var.value)
-        elif(cuadruplos[pc][3].value == 0):
-            print(cuadruplos[pc][3].name)
-        else:
-            print(cuadruplos[pc][3].name , print_var.value)
-        pc += 1
-        continue
-    if (cuadruplos[pc][0] == 'TAKE'):
-        input_var = verifyVariable(cuadruplos[pc][3].value)
-        input_var.value = input(cuadruplos[pc][3].name + " ")
-        pc += 1
-        continue
-    if (cuadruplos[pc][1] != '-'):
-        a = verifyVariable(cuadruplos[pc][1])
-        #print("a= ", a.value)
-    if (cuadruplos[pc][2] != '-'):
-        b = verifyVariable(cuadruplos[pc][2])
-        #print("b= ", b.value)
-    c = verifyVariable(cuadruplos[pc][3])
-    #print("c= ", c.value)
-    if (cuadruplos[pc][0] == '+'):
-        c.value = a.value + b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '-'):
-        c.value = a.value - b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '*'):
-        c.value = a.value * b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '/'):
-        c.value = a.value / b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '='):
-        if c.type == 'FLOAT':
-            c.value = round(float(a.value),4)
-        elif c.type == 'WORD':
-            c.value = int(a.value)
-        else:
-            c.value = a.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '=='):
-        checkBooleanOperation (a ,b)
-        if (a.type == 'WORD'):
-            c.type = 'WORD'
-        elif (a.type == 'FLOAT'):
-            c.type = 'FLOAT'
-        c.value = a.value == b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '>='):
-        checkBooleanOperation (a ,b)
-        if (a.type == 'WORD'):
-            c.type = 'WORD'
-        elif (a.type == 'FLOAT'):
-            c.type = 'FLOAT'
-        c.value = a.value >= b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '<='):
-        checkBooleanOperation (a,b)
-        if (a.type == 'WORD'):
-            c.type = 'WORD'
-        elif (a.type == 'FLOAT'):
-            c.type = 'FLOAT'
-        c.value = a.value <= b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '>'):
-        checkBooleanOperation (a ,b)
-        if (a.type == 'WORD'):
-            c.type = 'WORD'
-        elif (a.type == 'FLOAT'):
-            c.type = 'FLOAT'
-        c.value = a.value > b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '<'):
-        checkBooleanOperation (a ,b)
-        if (a.type == 'WORD'):
-            c.type = 'WORD'
-        elif (a.type == 'FLOAT'):
-            c.type = 'FLOAT'
-        c.value = a.value < b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == '!='):
-        checkBooleanOperation (a ,b)
-        if (a.type == 'WORD'):
-            c.type = 'WORD'
-        elif (a.type == 'FLOAT'):
-            c.type = 'FLOAT'
-        c.value = a.value != b.value
-        pc += 1
-    elif (cuadruplos[pc][0] == 'gotoF'):
-        if(a.value == False):
-            pc = c.value
-        else:
-            pc += 1
-    elif (cuadruplos[pc][0] == 'goto'):
-        pc = c.value
-    
-    
+
 #print("Espacio de variables")
 #for i in range(len(variableSpace)):
 #    print (variableSpace[i].name, variableSpace[i].type, variableSpace[i].value)

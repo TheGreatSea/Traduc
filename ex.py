@@ -14,9 +14,24 @@ def verifyVariable(variable):
         print("error")
         pass
 
-
-for pc in range(len(cuadruplos)):
-    print ("Program counter: ", pc)
+pc = 0
+while (pc < len(cuadruplos)):
+    #print ("Program counter: ", pc)
+    if (cuadruplos[pc][0] == 'PRINT'):
+        print_var = verifyVariable(cuadruplos[pc][3].value)
+        if(cuadruplos[pc][3].name == 'None'):
+            print(print_var.value)
+        elif(cuadruplos[pc][3].value == 0):
+            print(cuadruplos[pc][3].name)
+        else:
+            print(cuadruplos[pc][3].name , print_var.value)
+        pc += 1
+        continue
+    if (cuadruplos[pc][0] == 'TAKE'):
+        input_var = verifyVariable(cuadruplos[pc][3].value)
+        input_var.value = input(cuadruplos[pc][3].name + " ")
+        pc += 1
+        continue
     if (cuadruplos[pc][1] != '-'):
         a = verifyVariable(cuadruplos[pc][1])
         #print("a= ", a.value)
@@ -27,17 +42,24 @@ for pc in range(len(cuadruplos)):
     #print("c= ", c.value)
     if (cuadruplos[pc][0] == '+'):
         c.value = a.value + b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '-'):
         c.value = a.value - b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '*'):
         c.value = a.value * b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '/'):
         c.value = a.value / b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '='):
         if c.type == 'FLOAT':
-            c.value = float(a.value)
+            c.value = round(float(a.value),4)
         elif c.type == 'WORD':
             c.value = int(a.value)
+        else:
+            c.value = a.value
+        pc += 1
     elif (cuadruplos[pc][0] == '=='):
         checkBooleanOperation (a ,b)
         if (a.type == 'WORD'):
@@ -45,6 +67,7 @@ for pc in range(len(cuadruplos)):
         elif (a.type == 'FLOAT'):
             c.type = 'FLOAT'
         c.value = a.value == b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '>='):
         checkBooleanOperation (a ,b)
         if (a.type == 'WORD'):
@@ -52,13 +75,15 @@ for pc in range(len(cuadruplos)):
         elif (a.type == 'FLOAT'):
             c.type = 'FLOAT'
         c.value = a.value >= b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '<='):
-        checkBooleanOperation (a ,b)
+        checkBooleanOperation (a,b)
         if (a.type == 'WORD'):
             c.type = 'WORD'
         elif (a.type == 'FLOAT'):
             c.type = 'FLOAT'
         c.value = a.value <= b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '>'):
         checkBooleanOperation (a ,b)
         if (a.type == 'WORD'):
@@ -66,6 +91,7 @@ for pc in range(len(cuadruplos)):
         elif (a.type == 'FLOAT'):
             c.type = 'FLOAT'
         c.value = a.value > b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '<'):
         checkBooleanOperation (a ,b)
         if (a.type == 'WORD'):
@@ -73,6 +99,7 @@ for pc in range(len(cuadruplos)):
         elif (a.type == 'FLOAT'):
             c.type = 'FLOAT'
         c.value = a.value < b.value
+        pc += 1
     elif (cuadruplos[pc][0] == '!='):
         checkBooleanOperation (a ,b)
         if (a.type == 'WORD'):
@@ -80,9 +107,12 @@ for pc in range(len(cuadruplos)):
         elif (a.type == 'FLOAT'):
             c.type = 'FLOAT'
         c.value = a.value != b.value
+        pc += 1
     elif (cuadruplos[pc][0] == 'gotoF'):
         if(a.value == False):
             pc = c.value
+        else:
+            pc += 1
     elif (cuadruplos[pc][0] == 'goto'):
         pc = c.value
 
