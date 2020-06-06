@@ -10,13 +10,17 @@ class data:
         self.value = value
 
 class var_obt:
-    def __init__(self, name, types, value, dim1, dim2, dim3):
+    def __init__(self, name, types, dim, dim1, dim2, dim3):
         self.name = name
         self.type = types
-        self.value = value
+        self.dim = dim
         self.dim1 = dim1
         self.dim2 = dim2
         self.dim3 = dim3
+    def __eq__(self, other):
+        return self.name == other.name
+    def __hash__(self):
+        return hash(('name', self.name))        
 
 tokens = [
     'ID',
@@ -420,13 +424,13 @@ def p_VEC(p):
     | ID PARENTESISI VALUE COMA VALUE COMA VALUE PARENTESISF
     '''
     if len(p) == 2 :
-        p[0] = p[1]
+        p[0] = var_obt(p[1],"VAR",0,0,0,0) 
     elif len(p) == 5 :
-        p[0] = p[1]
+        p[0] = var_obt(p[1],"ARRAY",1,p[3],0,0) 
     elif len(p) == 7 :
-        p[0] = p[1]
+        p[0] = var_obt(p[1],"ARRAY",2,p[3],p[5],0) 
     elif len(p) == 9 :
-        p[0] = p[1]
+        p[0] = var_obt(p[1],"ARRAY",3,p[3],p[5],p[7]) 
 
 
 #Gramatica de los metodos
@@ -779,14 +783,17 @@ def p_error(p):
 def createSymbolTable(): 
     global variables
     global tablaSimbolos
+    global tipos
     tipos.reverse()
-    aux = []
-    auxt = []
+    seen_titles = set()
+    var_array = []
+    types_array = []
     for i in range(len(variables)):
-        if aux.count(variables[i]) == 0:
-            aux.append(variables[i])
-            auxt.append(tipos[i])
-    tablaSimbolos = [aux,auxt]
+        if variables[i].name not in seen_titles:
+            var_array.append(variables[i])
+            types_array.append(tipos[i])
+            seen_titles.add(variables[i].name)
+    tablaSimbolos = [var_array,types_array]
 
 def createVariableSpace():
     global tablaSimbolos
@@ -794,14 +801,34 @@ def createVariableSpace():
     global avail
     global temporalSpace
     for i in range(len(tablaSimbolos[0])):
-        name = tablaSimbolos[0][i]
+        name = tablaSimbolos[0][i].name
+        dim = tablaSimbolos[0][i].dim
+        dim1 = tablaSimbolos[0][i].dim1
+        dim2 = tablaSimbolos[0][i].dim2
+        dim3 = tablaSimbolos[0][i].dim3
         if tablaSimbolos[1][i] == 'WORD':
             types = 'WORD'
             valor = 0
         else:
             types = 'FLOAT'
             valor = 0.0
-        variableSpace.append(data(name,types,valor))
+        if(tablaSimbolos[0][i].type == 'VAR'):
+            variableSpace.append(data(name,types,valor))
+        if(tablaSimbolos[0][i].type == 'ARRAY'):
+            if(dim1 <= 0 and dim == 1):
+                raise ValueError('An array with 0 size was being created')
+            if((dim1 <= 0 or dim2 <= 0) and dim == 2):
+                raise ValueError('An array with 0 size was being created')
+            if((dim1 <= 0 or dim2 <= 0 or dim3 <= 0) and dim == 3):
+                raise ValueError('An array with 0 size was attempted to being created')
+            variableSpace.append(data( name , 'ARRAY' , [dim1,dim2,dim3] ))
+            size = dim1
+            if(dim2 != 0):
+                size *= dim2
+            if(dim3 != 0):
+                size *= dim3
+            for j in range(size):
+                variableSpace.append(data(name,types,valor))
     for i in range(len(avail)):
         name = avail[i]
         temporalSpace.append(data(name,'ALL',0))
@@ -844,25 +871,27 @@ def checkBooleanOperation (a ,b):
 
 parser = yacc.yacc(start='PROGRAMA')
 
-print("CODE VERIFICATION")
+print("Program start")
 f = open('Test.txt', "r")
+
 yacc.parse(f.read())
+
 createSymbolTable()
 createVariableSpace()
 
-aux = False
 
-#print("Espacio de variables")
-#for i in range(len(variableSpace)):
-#    print (variableSpace[i].name, variableSpace[i].type, variableSpace[i].value)
+print("Espacio de variables")
+for i in range(len(variableSpace)):
+    print (variableSpace[i].name, variableSpace[i].type, variableSpace[i].value)
+
 
 #print("Espacio de temporales")
 #for i in range(len(temporalSpace)):
 #    print (temporalSpace[i].name, temporalSpace[i].type, temporalSpace[i].value)
 
-print("Cuadruplos")
-for i in range(len(cuadruplos)):
-    print(cuadruplos[i])
+#print("Cuadruplos")
+#for i in range(len(cuadruplos)):
+#    print(cuadruplos[i])
 
 
 #print("Espacio de variables")
@@ -874,3 +903,4 @@ for i in range(len(cuadruplos)):
 #    print(tablaSimbolos[i])
 
 f.close()
+print("Program finish")

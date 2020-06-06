@@ -120,6 +120,8 @@ while (pc < len(cuadruplos)):
 
 
 
+
+
     def t_NOT(t):
         r'NOT'
         t.type = 'NOT'
@@ -131,3 +133,12 @@ def p_TXT(p):
     TXT : ID TXT
     | 
     '''
+
+
+class var_obt:
+    def __init__(self, name, types, dim1, dim2, dim3):
+        self.name = name
+        self.type = types
+        self.dim1 = dim1
+        self.dim2 = dim2
+        self.dim3 = dim3

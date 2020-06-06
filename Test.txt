@@ -1,4 +1,5 @@
-
+PUT L(2,2) as FLOAT
+PUT A as FLOAT
 BEGIN
 
 END
