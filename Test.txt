@@ -1,5 +1,7 @@
-PUT L(2,2) as FLOAT
 PUT A as FLOAT
+
 BEGIN
+
+GIVE A = 2 + 3
 
 END

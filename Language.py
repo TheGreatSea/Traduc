@@ -20,7 +20,9 @@ class var_obt:
     def __eq__(self, other):
         return self.name == other.name
     def __hash__(self):
-        return hash(('name', self.name))        
+        return hash(('name', self.name))   
+    def __str__(self):
+        return (str(self.name) + " " + str(self.type))
 
 tokens = [
     'ID',
@@ -440,7 +442,8 @@ def p_R(p):
     |
     '''
     global dirProcedimientos, cuadruplos
-    cuadruplos.append(['ENDPROCEDURE','-','-','-'])
+    if(len(p)>1):
+        cuadruplos.append(['ENDPROCEDURE','-','-','-'])
 
 def p_PROCEDURE(p):
     '''
@@ -779,7 +782,7 @@ def p_error(p):
     print("#PARSING ERROR#")
     print(p)
 
-#Metodos varios para el funcionamiento correcto del programa
+#Metodos para crear las variables y el espacio de almacenamiento
 def createSymbolTable(): 
     global variables
     global tablaSimbolos
@@ -833,6 +836,9 @@ def createVariableSpace():
         name = avail[i]
         temporalSpace.append(data(name,'ALL',0))
 
+
+
+
 def searchLocation(variable):
     global variableSpace
     global temporalSpace
@@ -877,6 +883,7 @@ f = open('Test.txt', "r")
 yacc.parse(f.read())
 
 createSymbolTable()
+
 createVariableSpace()
 
 
