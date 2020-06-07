@@ -17,12 +17,6 @@ class var_obt:
         self.dim1 = dim1
         self.dim2 = dim2
         self.dim3 = dim3
-    def __eq__(self, other):
-        return self.name == other.name
-    def __hash__(self):
-        return hash(('name', self.name))   
-    def __str__(self):
-        return (str(self.name) + " " + str(self.type))
 
 tokens = [
     'ID',
@@ -430,10 +424,9 @@ def p_VEC(p):
     elif len(p) == 5 :
         p[0] = var_obt(p[1],"ARRAY",1,p[3],0,0) 
     elif len(p) == 7 :
-        p[0] = var_obt(p[1],"ARRAY",2,p[3],p[5],0) 
+        p[0] = var_obt(p[1],"ARRAY",2,p[5],p[3],0) 
     elif len(p) == 9 :
-        p[0] = var_obt(p[1],"ARRAY",3,p[3],p[5],p[7]) 
-
+        p[0] = var_obt(p[1],"ARRAY",3,p[7],p[5],p[3]) 
 
 #Gramatica de los metodos
 def p_R(p):
@@ -480,7 +473,7 @@ def p_B(p):
 #Gramatica para llamr a sub-procedimientos
 def p_CALL(p):
     '''
-    CALL : TRAVEL ID
+    CALL : TRAVEL ID DOSPUNTOS
     '''
     global dirProcedimientos, cuadruplos
     cuadruplos.append(['CALL','-','-',str(p[2])])
@@ -635,6 +628,7 @@ def p_LOGIC(p):
     cuadruplos.append(['gotoF', result , '-' ])
     saltos.append(len(cuadruplos)-1)
 
+#Funcion de write
 def p_EXPR(p):
     '''
     EXPR : VEC AIGUAL EA
@@ -836,8 +830,24 @@ def createVariableSpace():
         name = avail[i]
         temporalSpace.append(data(name,'ALL',0))
 
-
-
+def searchArray(variable):
+    global variableSpace
+    global temporalSpace
+    index = -1
+    for i in range(len(variableSpace)):
+        if (variable.name == variableSpace[i].name and variableSpace[i].type == 'ARRAY'):
+            index = i 
+            break
+    arrayData = variableSpace[index]
+    if(variable.dim1 > arrayData.value[0] or variable.dim2 > arrayData.value[1] or variable.dim3 > arrayData.value[2]):
+        return 0
+    if (arrayData.value[2] > 0):
+        return variableSpace[index+1+variable.dim1+variable.dim2*arrayData.value[1]+variable.dim3*arrayData.value[2]]
+    elif (arrayData.value[1] > 0):
+        return variableSpace[index+1+variable.dim1+variable.dim2*arrayData.value[1]]
+    elif (arrayData.value[0] > 0):
+        return variableSpace[index+1+variable.dim1]
+    return 0
 
 def searchLocation(variable):
     global variableSpace
@@ -851,21 +861,23 @@ def searchLocation(variable):
     return 0
 
 def verifyVariable(variable):
-    try:
-        aux = variable
+    if(isinstance(variable,int)):
         variable = int(variable)
         variable = data('PUREDATA','ALL',variable)
         return variable
-    except ValueError:
-        try:
-            variable = searchLocation(variable)
-            if variable == 0:
-                raise  ValueError('Error variable not found')
-            else:
-                return variable
-        except Exception as error :
-            print ( "ERROR: Variable", aux, "no existe.")
-            sys.exit(0)
+    elif(isinstance(variable,str)):
+        variable = searchLocation(variable)
+    else:
+        tipo = variable.type
+        if(tipo == 'ARRAY'):
+            variable = searchArray(variable)
+        if(tipo == 'VAR'):
+            variable = searchLocation(variable.name)
+    if variable == 0:
+        raise  ValueError('Error with operation variables')
+        sys.exit(0)
+    else:
+        return variable
 
 def checkBooleanOperation (a ,b):
     if (a.type == 'WORD' and b.type == 'FOAT'):
@@ -883,13 +895,12 @@ f = open('Test.txt', "r")
 yacc.parse(f.read())
 
 createSymbolTable()
-
 createVariableSpace()
 
 
-print("Espacio de variables")
-for i in range(len(variableSpace)):
-    print (variableSpace[i].name, variableSpace[i].type, variableSpace[i].value)
+#print("Espacio de variables")
+#for i in range(len(variableSpace)):
+#    print (variableSpace[i].name, variableSpace[i].type, variableSpace[i].value)
 
 
 #print("Espacio de temporales")
@@ -900,6 +911,112 @@ for i in range(len(variableSpace)):
 #for i in range(len(cuadruplos)):
 #    print(cuadruplos[i])
 
+pc = 0
+while (pc < len(cuadruplos)):
+    #print ("Program counter: ", pc)
+    if (cuadruplos[pc][0] == 'ENDMAIN'):
+        break
+    if (cuadruplos[pc][0] == 'PRINT'):
+        print_var = verifyVariable(cuadruplos[pc][3].value)
+        if(cuadruplos[pc][3].name == 'None'):
+            print(print_var.value)
+        elif(cuadruplos[pc][3].value == 0):
+            print(cuadruplos[pc][3].name)
+        else:
+            print(cuadruplos[pc][3].name , print_var.value)
+        pc += 1
+        continue
+    if (cuadruplos[pc][0] == 'TAKE'):
+        input_var = verifyVariable(cuadruplos[pc][3].value)
+        if (input_var.type == 'FLOAT'):
+            input_var.value = float(input(cuadruplos[pc][3].name + " "))
+        if (input_var.type == 'WORD'):
+            input_var.value = int(input(cuadruplos[pc][3].name + " "))
+        pc += 1
+        continue
+    if (cuadruplos[pc][1] != '-'):
+        a = verifyVariable(cuadruplos[pc][1])
+        #print("a= ", a.value)
+    if (cuadruplos[pc][2] != '-'):
+        b = verifyVariable(cuadruplos[pc][2])
+        #print("b= ", b.value)
+    c = verifyVariable(cuadruplos[pc][3])
+    #print("c= ", c.value)
+    if (cuadruplos[pc][0] == '+'):
+        c.value = a.value + b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '-'):
+        c.value = a.value - b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '*'):
+        c.value = a.value * b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '/'):
+        c.value = a.value / b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '='):
+        if c.type == 'FLOAT':
+            c.value = round(float(a.value),4)
+        elif c.type == 'WORD':
+            c.value = int(a.value)
+        else:
+            c.value = a.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '=='):
+        checkBooleanOperation (a ,b)
+        if (a.type == 'WORD'):
+            c.type = 'WORD'
+        elif (a.type == 'FLOAT'):
+            c.type = 'FLOAT'
+        c.value = a.value == b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '>='):
+        checkBooleanOperation (a ,b)
+        if (a.type == 'WORD'):
+            c.type = 'WORD'
+        elif (a.type == 'FLOAT'):
+            c.type = 'FLOAT'
+        c.value = a.value >= b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '<='):
+        checkBooleanOperation (a,b)
+        if (a.type == 'WORD'):
+            c.type = 'WORD'
+        elif (a.type == 'FLOAT'):
+            c.type = 'FLOAT'
+        c.value = a.value <= b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '>'):
+        checkBooleanOperation (a ,b)
+        if (a.type == 'WORD'):
+            c.type = 'WORD'
+        elif (a.type == 'FLOAT'):
+            c.type = 'FLOAT'
+        c.value = a.value > b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '<'):
+        checkBooleanOperation (a ,b)
+        if (a.type == 'WORD'):
+            c.type = 'WORD'
+        elif (a.type == 'FLOAT'):
+            c.type = 'FLOAT'
+        c.value = a.value < b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == '!='):
+        checkBooleanOperation (a ,b)
+        if (a.type == 'WORD'):
+            c.type = 'WORD'
+        elif (a.type == 'FLOAT'):
+            c.type = 'FLOAT'
+        c.value = a.value != b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == 'gotoF'):
+        if(a.value == False):
+            pc = c.value
+        else:
+            pc += 1
+    elif (cuadruplos[pc][0] == 'goto'):
+        pc = c.value
 
 #print("Espacio de variables")
 #for i in range(len(variableSpace)):

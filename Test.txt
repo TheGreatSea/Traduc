@@ -1,7 +1,10 @@
-PUT A as FLOAT
+PUT A(5,2) as FLOAT
 
 BEGIN
 
-GIVE A = 2 + 3
-
+TAKE "Dame el valor del primer A" : A(0)
+GIVE A(2) = 23 * ( A(0) + 3)
+PRINT A(0)
+PRINT A(1)
+PRINT A(2)
 END

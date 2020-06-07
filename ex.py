@@ -122,7 +122,7 @@ while (pc < len(cuadruplos)):
 
 
 
-    def t_NOT(t):
+def t_NOT(t):
         r'NOT'
         t.type = 'NOT'
         return t
