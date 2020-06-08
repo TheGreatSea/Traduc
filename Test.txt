@@ -1,15 +1,40 @@
-PUT i, j, aux, X, menu as WORD
-PUT A(10) as WORD
+PUT i, j,k, aux, X, menu as WORD
+PUT A(3,5,5) as WORD
+PUT B(5,5) as WORD
 
 BEGIN
 ET inicio
 ACT:
-TAKE "Tamano del arreglo" : X
-LOOP UNTIL (X > 0 AND X < 11)
-TRAVEL matrizObtain
-TRAVEL ordernar
-PRINT ("Resultados")
-TRAVEL printArray
+TAKE "Tamano de la matriz cuadrada" : X
+LOOP UNTIL (X>0 AND X<6)
+PRINT ("Dame los valores para las tres matrices")
+
+FOR k = 0 TILL 3:
+FOR i = 0 TILL X:
+FOR j = 0 TILL X:
+PRINT ("Hoja: ") : k
+PRINT ("Renglon") : i
+PRINT ("Columna") : j
+TAKE "Dato": A(k,i,j)
+INCOMING j
+INCOMING i
+INCOMING k
+
+FOR i = 0 TILL X:
+FOR j = 0 TILL X:
+GIVE B(i,j) = A(0,i,j) + A(1,i,j) + A(2,i,j)
+INCOMING j
+INCOMING i
+
+PRINT ("Matriz resultado")
+FOR i=0 TILL X:
+FOR j=0 TILL X:
+PRINT ("Renglon") : i
+PRINT ("Columna") : j
+PRINT ("Valor"): B(i,j)
+INCOMING j
+INCOMING i
+
 #Checar si el programa se repite
 TAKE "Quiere repetir? (0)" : menu
 WHEREVER menu == 0 THEN
@@ -19,28 +44,3 @@ PRINT ("El programa ha terminado")
 NOWHERE
 END
 
-SUBMETHOD ordernar:
-FOR i=0 TILL X:
-FOR j=i+1 TILL X:
-WHEREVER A(i)>A(j) THEN
-GIVE aux = A(i)
-GIVE A(i) = A(j)
-GIVE A(j) = aux
-NOWHERE
-INCOMING j
-INCOMING i
-RETURN
-
-SUBMETHOD matrizObtain:
-FOR i=0 TILL X:
-PRINT ("Posicion") : i
-TAKE "Dame el valor": A(i)
-INCOMING i
-RETURN
-
-SUBMETHOD printArray:
-FOR i=0 TILL X:
-PRINT ("Posicion") : i
-PRINT A(i)
-INCOMING i
-RETURN

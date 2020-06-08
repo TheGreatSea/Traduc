@@ -130,13 +130,9 @@ PRINT ("La x2 es:") : F
 
 NOWHERE
 
-
-
 END
 
-
 -------------------------------------------
-
 
 PUT i, j, k, menu as WORD
 PUT A(5,5), B(5,5), C(5,5) as WORD
@@ -200,7 +196,6 @@ TAKE "Renglones R1" : R1
 TAKE "Columnas R2" : C2
 TAKE "Renglones R2" : R2
 LOOP UNTIL (C1 == R2)
-
 TRAVEL matrizObtain
 FOR i=0 TILL R1:
 FOR j=0 TILL C2:
@@ -241,7 +236,6 @@ INCOMING X
 RETURN
 
 -------------------------------------------------
-
 PUT i, j, aux, X, menu as WORD
 PUT A(10) as WORD
 
@@ -290,5 +284,63 @@ INCOMING i
 RETURN
 -------------------------------------------------------------
 
+PUT i, j, aux, X,Y, menu as FLOAT
 
+BEGIN
+ET inicio
+
+PRINT ("Calcular factorial(1)")
+PRINT ("Calcular potencia(2)")
+PRINT ("Calcular formula mas porciento(3)")
+PRINT ("Finalizar (4)")
+
+TAKE "Opcion?" : menu
+
+WHEREVER menu == 1 THEN
+TRAVEL factorial
+NOWHERE
+WHEREVER menu == 2 THEN
+TRAVEL potencia
+NOWHERE
+WHEREVER menu == 3 THEN
+TRAVEL formula
+NOWHERE
+WHEREVER menu != 4  THEN
+JUMP inicio
+OTHER
+PRINT ("Programa finalizado")
+NOWHERE
+END
+
+SUBMETHOD factorial:
+TAKE "Dame el numero X!": X
+GIVE aux = 1*X
+FOR i=1 TILL X:
+GIVE aux = aux * i
+INCOMING i
+PRINT ("Resultado") : aux
+RETURN
+
+SUBMETHOD potencia:
+TAKE "Dame el numero X": X
+TAKE "Dame la potencia": aux
+GIVE Y = X
+WHEREVER aux == 0 THEN
+GIVE X = 1
+OTHER
+WHEREVER aux != 1 THEN 
+FOR i=1 TILL aux:
+GIVE X = Y * X
+INCOMING i
+NOWHERE
+NOWHERE
+PRINT ("Resultado") : X
+RETURN
+
+SUBMETHOD formula:
+TAKE "Dame el valor de X": X
+TAKE "Dame el valor de Y": Y
+GIVE X = X + X*Y/100
+PRINT ("Resultado") : X
+RETURN
 
