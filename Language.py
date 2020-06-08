@@ -847,20 +847,25 @@ def searchArray(variable):
             index = i 
             break
     arrayData = variableSpace[index]
-    if(not isinstance(variable.dim1,int)):
-        variable.dim1 = searchLocation(variable.dim1).value
-    if(not isinstance(variable.dim2,int)):
-        variable.dim2 = searchLocation(variable.dim2).value
-    if(not isinstance(variable.dim3,int)):
-        variable.dim3 = searchLocation(variable.dim3).value
-    if(int(variable.dim1) > int(arrayData.value[0]) or int(variable.dim2) > int(arrayData.value[1]) or int(variable.dim3) > int(arrayData.value[2])):
+    dim1 = variable.dim1
+    dim2 = variable.dim2
+    dim3 = variable.dim3
+    #print("Estas son las variables dimensionales", dim1, dim2, dim3)
+    if(not isinstance(dim1,int)):
+        dim1 = searchLocation(variable.dim1).value
+    if(not isinstance(dim2,int)):
+        dim2 = searchLocation(variable.dim2).value
+    if(not isinstance(dim3,int)):
+        dim3 = searchLocation(variable.dim3).value
+    #print("Estas son las variables dimensionales", dim1, dim2, dim3)
+    if(int(dim1) > int(arrayData.value[0]) or int(dim2) > int(arrayData.value[1]) or int(dim3) > int(arrayData.value[2])):
         return 0
     if (arrayData.value[2] > 0):
-        return variableSpace[index+1+variable.dim1+variable.dim2*arrayData.value[1]+variable.dim3*arrayData.value[2]]
+        return variableSpace[index+1+dim1+dim2*arrayData.value[1]+dim3*arrayData.value[2]]
     elif (arrayData.value[1] > 0):
-        return variableSpace[index+1+variable.dim1+variable.dim2*arrayData.value[1]]
+        return variableSpace[index+1+dim1+dim2*arrayData.value[1]]
     elif (arrayData.value[0] > 0):
-        return variableSpace[index+1+variable.dim1]
+        return variableSpace[index+1+dim1]
     return 0
 
 def searchLocation(variable):
@@ -889,7 +894,7 @@ def verifyVariable(variable):
         if(tipo == 'VAR'):
             variable = searchLocation(variable.name)
     if variable == 0:
-        raise  ValueError('Error with operation variables', aux)
+        raise  ValueError('Variable does not exist', aux)
         sys.exit(0)
     else:
         return variable
@@ -922,9 +927,9 @@ createVariableSpace()
 #for i in range(len(temporalSpace)):
 #    print (temporalSpace[i].name, temporalSpace[i].type, temporalSpace[i].value)
 
-print("Cuadruplos")
-for i in range(len(cuadruplos)):
-    print(cuadruplos[i])
+#print("Cuadruplos")
+#for i in range(len(cuadruplos)):
+#    print(cuadruplos[i])
 
 pila_ejecucion = []
 
@@ -958,12 +963,12 @@ while (pc < len(cuadruplos)):
                 pila_ejecucion.append(pc+1)
                 pc = dirProcedimientos[i][1]
                 break
-        print(pila_ejecucion)
+        #print(pila_ejecucion)
         continue
     if (cuadruplos[pc][0] == 'ENDPROCEDURE'):
-        print(pila_ejecucion)
+        #print(pila_ejecucion)
         index = pila_ejecucion.pop()
-        print(pila_ejecucion)
+       # print(pila_ejecucion)
         pc = index
         continue
     if (cuadruplos[pc][0] == 'JUMP'):
