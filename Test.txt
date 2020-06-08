@@ -1,10 +1,99 @@
-PUT A(5,2) as FLOAT
+PUT i, j, k, menu as WORD
+PUT A(5,5), B(5,5), C(5,5) as WORD
+PUT L,P,R1,C1,R2,C2,X,Y as WORD 
 
 BEGIN
 
-TAKE "Dame el valor del primer A" : A(0)
-GIVE A(2) = 23 * ( A(0) + 3)
-PRINT A(0)
-PRINT A(1)
-PRINT A(2)
+ET inicio
+
+PRINT ("(1) Sumar dos matrices")
+PRINT ("(2) Multiplicar dos matrices")
+TAKE "Dame la opcion que deseas tomar" : menu
+
+WHEREVER menu == 1 THEN
+TRAVEL sumMatriz
+NOWHERE
+
+WHEREVER menu == 2 THEN
+TRAVEL mulMatriz
+NOWHERE
+
+#Checar si el programa se repite
+TAKE "Quiere repetir? (0)" : menu
+WHEREVER menu == 0 THEN
+JUMP inicio
+OTHER
+PRINT ("El programa a terminado")
+NOWHERE
+
 END
+
+SUBMETHOD sumMatriz:
+PRINT ("Dame las dimensiones Metodo suma")
+ACT:
+TAKE "Columnas R1" : C1
+TAKE "Renglones R1" : R1
+TAKE "Columnas R2" : C2
+TAKE "Renglones R2" : R2
+LOOP UNTIL ((C1 == C2) AND (R1 == R2))
+TRAVEL matrizObtain
+
+GIVE P = 0
+GIVE L = 0
+WHILST P <= R1 :
+WHILST L <= C1 :
+GIVE C(P,L) = A(P,L) + B(P,L)
+GIVE P = P+1
+GIVE L = L+1
+ENDWHILST
+ENDWHILST
+
+PRINT ("Resultado")
+FOR X=0 TILL R1:
+FOR Y=0 TILL C1:
+PRINT ("Posicion X") : X
+PRINT ("Posicion Y") : Y
+PRINT ("Valor"): C(X,Y)
+INCOMING Y
+INCOMING X
+RETURN
+
+SUBMETHOD mulMatriz:
+PRINT ("Dame las dimensiones")
+ACT:
+TAKE "Columnas R1" : C1
+TAKE "Renglones R1" : R1
+TAKE "Columnas R2" : C2
+TAKE "Renglones R2" : R2
+LOOP UNTIL (C1 == R2)
+TRAVEL matrizObtain
+FOR i=0 TILL R1:
+FOR j=0 TILL C2:
+FOR k=0 TILL C1:
+GIVE C(i,j) = C(i,j) + A(i,k)*B(k,j)
+INCOMING k
+INCOMING j
+INCOMING i
+RETURN
+
+SUBMETHOD matrizObtain:
+PRINT ("Metodo obtener matriz")
+PRINT ("MatrizA")
+FOR X = 0 TILL R1:
+FOR Y = 0 TILL C1:
+PRINT ("Posicion X") : X
+PRINT ("Posicion Y") : Y
+TAKE "Dato": P
+GIVE A(X,Y) = P
+INCOMING Y
+INCOMING X
+PRINT ("MatrizB")
+FOR X = 0 TILL R1:
+FOR Y = 0 TILL C1:
+PRINT ("Posicion X") : X
+PRINT ("Posicion Y") : Y
+TAKE "Dato" : P
+GIVE A(X,Y) = P
+INCOMING Y
+INCOMING X
+RETURN

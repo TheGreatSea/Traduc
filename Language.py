@@ -369,7 +369,12 @@ def checkTemporals():
 
 def p_PROGRAMA(p): 
     '''
-    PROGRAMA : V BEGIN B END R
+    PROGRAMA : V BEGIN B ENDMAIN R
+    '''
+    
+def p_ENDMAIN(p):
+    '''
+    ENDMAIN : END
     '''
     global dirProcedimientos, cuadruplos
     cuadruplos.append(['ENDMAIN','-','-','-'])
@@ -431,16 +436,21 @@ def p_VEC(p):
 #Gramatica de los metodos
 def p_R(p):
     '''
-    R : PROCEDURE B RETURN R
+    R : PROCEDURE B ENDPROCEDURE R
     |
     '''
+        
+
+def p_ENDPROCEDURE(p):
+    '''
+    ENDPROCEDURE : RETURN
+    '''
     global dirProcedimientos, cuadruplos
-    if(len(p)>1):
-        cuadruplos.append(['ENDPROCEDURE','-','-','-'])
+    cuadruplos.append(['ENDPROCEDURE','-','-','-'])
 
 def p_PROCEDURE(p):
     '''
-    PROCEDURE : SUBMETHOD ID
+    PROCEDURE : SUBMETHOD ID DOSPUNTOS
     '''
     global dirProcedimientos, cuadruplos
     rep= False
@@ -451,7 +461,7 @@ def p_PROCEDURE(p):
     if rep == False :
         dirProcedimientos.append([p[2],len(cuadruplos)])
     else:
-        raise Exception('El Id de una sub-metodo es un duplicado')
+        raise ValueError('El Id de una sub-metodo es un duplicado')
 
 #Body de la gramatica
 def p_B(p):
@@ -473,7 +483,7 @@ def p_B(p):
 #Gramatica para llamr a sub-procedimientos
 def p_CALL(p):
     '''
-    CALL : TRAVEL ID DOSPUNTOS
+    CALL : TRAVEL ID 
     '''
     global dirProcedimientos, cuadruplos
     cuadruplos.append(['CALL','-','-',str(p[2])])
@@ -492,7 +502,7 @@ def p_ETIQUETAS(p):
     if rep == False :
         dirEtiquetas.append([p[2],len(cuadruplos)])
     else:
-        raise Exception('El Id de una etiqueta es duplicado')
+        raise ValueError('El Id de una etiqueta es duplicado')
 
 #Gramatica para generar saltos
 def p_SALTO(p):
@@ -508,7 +518,7 @@ def p_SALTO(p):
     if found == True:
         cuadruplos.append(['JUMP','-',dirEtiquetas[i][0],dirEtiquetas[i][1]])
     else:
-        cuadruplos.append(['JUMP','-',dirEtiquetas[i][0],-1])
+        raise ValueError("Se trato de generar un salto a una etiqueta inexistente")
 
 #Gramatica para el read
 def p_READ(p):
@@ -543,7 +553,7 @@ def p_EXP2(p):
     checkTemporals()
     tx = temporales.pop(0)
     cuadruplos.append(['=',e2,'-',tf])
-    cuadruplos.append(['<=',ID,tf,tx])
+    cuadruplos.append(['<',ID,tf,tx])
     cuadruplos.append(['gotoF',tx,'-'])
     saltos.append(len(cuadruplos)-2)
     temporales.append(tx)
@@ -657,14 +667,12 @@ def p_MENS(p):
     '''
     global cuadruplos
     if (len(p) == 2):
-        to_print = p[1]
-        print_value = data('None','ALL',to_print)
+        cuadruplos.append(['PRINT', '-', '-', p[1]])
     if (len(p) == 4):
-        to_print = str(p[2])
-        print_value = data(to_print,'ALL',0) 
+        cuadruplos.append(['PRINT', '-', str(p[2]), '-'])
     if (len(p) == 6):
-        print_value = data(str(p[2]),'ALL',str(p[5])) 
-    cuadruplos.append(['PRINT', '-', '-', print_value])
+        cuadruplos.append(['PRINT', '-', str(p[2]), p[5]])
+    
 
 #Operaciones aritmeticas
 def p_EA(p):
@@ -839,7 +847,13 @@ def searchArray(variable):
             index = i 
             break
     arrayData = variableSpace[index]
-    if(variable.dim1 > arrayData.value[0] or variable.dim2 > arrayData.value[1] or variable.dim3 > arrayData.value[2]):
+    if(not isinstance(variable.dim1,int)):
+        variable.dim1 = searchLocation(variable.dim1).value
+    if(not isinstance(variable.dim2,int)):
+        variable.dim2 = searchLocation(variable.dim2).value
+    if(not isinstance(variable.dim3,int)):
+        variable.dim3 = searchLocation(variable.dim3).value
+    if(int(variable.dim1) > int(arrayData.value[0]) or int(variable.dim2) > int(arrayData.value[1]) or int(variable.dim3) > int(arrayData.value[2])):
         return 0
     if (arrayData.value[2] > 0):
         return variableSpace[index+1+variable.dim1+variable.dim2*arrayData.value[1]+variable.dim3*arrayData.value[2]]
@@ -861,6 +875,7 @@ def searchLocation(variable):
     return 0
 
 def verifyVariable(variable):
+    aux = variable
     if(isinstance(variable,int)):
         variable = int(variable)
         variable = data('PUREDATA','ALL',variable)
@@ -874,7 +889,7 @@ def verifyVariable(variable):
         if(tipo == 'VAR'):
             variable = searchLocation(variable.name)
     if variable == 0:
-        raise  ValueError('Error with operation variables')
+        raise  ValueError('Error with operation variables', aux)
         sys.exit(0)
     else:
         return variable
@@ -907,23 +922,26 @@ createVariableSpace()
 #for i in range(len(temporalSpace)):
 #    print (temporalSpace[i].name, temporalSpace[i].type, temporalSpace[i].value)
 
-#print("Cuadruplos")
-#for i in range(len(cuadruplos)):
-#    print(cuadruplos[i])
+print("Cuadruplos")
+for i in range(len(cuadruplos)):
+    print(cuadruplos[i])
+
+pila_ejecucion = []
 
 pc = 0
 while (pc < len(cuadruplos)):
-    #print ("Program counter: ", pc)
+    #print ("Program counter: ", pc, cuadruplos[pc][0])
     if (cuadruplos[pc][0] == 'ENDMAIN'):
         break
     if (cuadruplos[pc][0] == 'PRINT'):
-        print_var = verifyVariable(cuadruplos[pc][3].value)
-        if(cuadruplos[pc][3].name == 'None'):
+        if(cuadruplos[pc][3] == '-'):
+            print(cuadruplos[pc][2])
+        elif(cuadruplos[pc][2] == '-'):
+            print_var = verifyVariable(cuadruplos[pc][3])
             print(print_var.value)
-        elif(cuadruplos[pc][3].value == 0):
-            print(cuadruplos[pc][3].name)
         else:
-            print(cuadruplos[pc][3].name , print_var.value)
+            print_var = verifyVariable(cuadruplos[pc][3])
+            print(cuadruplos[pc][2] , print_var.value)
         pc += 1
         continue
     if (cuadruplos[pc][0] == 'TAKE'):
@@ -933,6 +951,23 @@ while (pc < len(cuadruplos)):
         if (input_var.type == 'WORD'):
             input_var.value = int(input(cuadruplos[pc][3].name + " "))
         pc += 1
+        continue
+    if (cuadruplos[pc][0] == 'CALL'):
+        for i in range(len(dirProcedimientos)):
+            if(dirProcedimientos[i][0] == cuadruplos[pc][3]):
+                pila_ejecucion.append(pc+1)
+                pc = dirProcedimientos[i][1]
+                break
+        print(pila_ejecucion)
+        continue
+    if (cuadruplos[pc][0] == 'ENDPROCEDURE'):
+        print(pila_ejecucion)
+        index = pila_ejecucion.pop()
+        print(pila_ejecucion)
+        pc = index
+        continue
+    if (cuadruplos[pc][0] == 'JUMP'):
+        pc = cuadruplos[pc][3]
         continue
     if (cuadruplos[pc][1] != '-'):
         a = verifyVariable(cuadruplos[pc][1])
@@ -1001,6 +1036,12 @@ while (pc < len(cuadruplos)):
         elif (a.type == 'FLOAT'):
             c.type = 'FLOAT'
         c.value = a.value < b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == 'AND'):
+        c.value = a.value and b.value
+        pc += 1
+    elif (cuadruplos[pc][0] == 'OR'):
+        c.value = a.value or b.value
         pc += 1
     elif (cuadruplos[pc][0] == '!='):
         checkBooleanOperation (a ,b)
